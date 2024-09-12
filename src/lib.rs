@@ -1,5 +1,5 @@
 #[allow(dead_code)]
-pub trait DocumentedFields {
+pub trait DocumentedStruct {
     /// Returns all docstrings of the struct itself
     fn struct_docs() -> Vec<&'static str>;
 
@@ -14,7 +14,7 @@ pub trait DocumentedFields {
 }
 
 #[macro_export]
-macro_rules! code_docs {
+macro_rules! code_docs_struct {
     (
         $(#[$($meta:meta)?])*
         $vis:vis struct $name:ident {
@@ -32,7 +32,7 @@ macro_rules! code_docs {
                 )*
             }
 
-        impl DocumentedFields for $name {
+        impl DocumentedStruct for $name {
             fn struct_docs() -> Vec<&'static str> {
                 vec![
                     $(
@@ -87,7 +87,7 @@ macro_rules! code_docs {
 mod tests {
     use super::*;
 
-    code_docs! {
+    code_docs_struct! {
         #[derive(PartialEq, Eq, Debug)]
         /// This is a testing struct
         /// With two lines of docstring
