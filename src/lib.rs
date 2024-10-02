@@ -11,6 +11,12 @@ pub trait DocumentedStruct {
 
     /// Returns all docstrings of each field, each line is a separate string
     fn field_docs() -> Vec<Vec<&'static str>>;
+
+pub fn filter_docs(meta: &str) -> Option<&str> {
+    // i do not want to use regex crate
+    meta.strip_prefix("doc = r\"")
+        .or(meta.strip_prefix("doc =\nr\"")) // there was a newline before comment
+        .and_then(|x| x.strip_suffix("\"")) // remove the quotes
 }
 
 #[macro_export]
@@ -41,8 +47,7 @@ macro_rules! code_docs_struct {
                         )?
                     )*
                 ].into_iter()
-                 .filter(|y| y.starts_with("doc = r\""))
-                 .map(|y| &y[8..y.len()-1])
+                 .filter_map($crate::filter_docs)
                  .collect::<Vec<_>>()
             }
 
@@ -73,9 +78,8 @@ macro_rules! code_docs_struct {
                     )*
                 ].into_iter().map(|x| {
                     x.into_iter()
-                        .filter(|y| y.starts_with("doc = r\""))
-                        .map(|y| &y[8..y.len()-1])
-                        .collect::<Vec<_>>()
+                     .filter_map($crate::filter_docs)
+                     .collect::<Vec<_>>()
                 })
                 .collect::<Vec<_>>()
             }
@@ -87,10 +91,12 @@ macro_rules! code_docs_struct {
 mod tests {
     use super::*;
 
+    // NOTE: the newline below is intentional
     code_docs_struct! {
-        #[derive(PartialEq, Eq, Debug)]
+
         /// This is a testing struct
         /// With two lines of docstring
+        #[derive(PartialEq, Eq, Debug)]
         struct TestStruct {
             /// This field is u8
             pub field_a: u8,
